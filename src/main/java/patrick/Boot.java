@@ -13,19 +13,19 @@ public class Boot {
         serverThread.start();
 
         // Создаём 2-х клиентов и запускаем его
-        Client client = new Client();
-        Client client2 = new Client();
+        Client client = new Client("localhost");
+        Client client2 = new Client("localhost");
         client.send("Hello!");
-        pause();
+        pause(100);
         client2.send("И тебе привет!");
-        pause();
+        pause(200);
         client.send("И ещё хочу сказать...");
-        pause();
+        pause(100);
     }
 
-    private static void pause() {
+    private static void pause(int pauseInMilliseconds) {
         try {
-            Thread.sleep(100);
+            Thread.sleep(pauseInMilliseconds);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

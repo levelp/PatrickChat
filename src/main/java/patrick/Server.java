@@ -1,5 +1,6 @@
 package patrick;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -29,6 +30,7 @@ public class Server implements Runnable {
             // Открываем порт и слушаем его
             // Две программы не могут открыть на прослушивание
             // один и тот же порт одновременно
+            // 0..2^16-1 = 65535
             ServerSocket serverSocket = new ServerSocket(PORT);
             // Пишем, что мы запустились на заданном порту
             System.out.println("Сервер запущен на порту: " + PORT);
@@ -36,6 +38,7 @@ public class Server implements Runnable {
             int clientCount = 0;
             // Принимаем подключения от клиентов
             while (true) {
+                // Останавливаемся и ждём входящее подключение
                 Socket socket = serverSocket.accept();
                 clientCount++; // Новое подключение => увеличиваем счётчик
                 System.out.println("Подключился клиент " +
@@ -62,15 +65,28 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     * Класс, который отвечает за обмен данными с одним клиентом
+     */
     class ClientCom implements Runnable {
         private final int id;
         private final Socket socket;
         private final PrintWriter printWriter;
 
+        /**
+         * @param id     Идентификатор клиента (уникальное число)
+         *               1, 2, 3 ...
+         *               Будем его везде использовать для нумерации клиентов
+         * @param socket Объект для обмена данными с данным конкретным клиентом
+         *               inputStream - читаем из буфера сетевой карты
+         *               outputStream - пишем конкретно этому клиенту
+         * @throws IOException
+         */
         ClientCom(int id, Socket socket) throws IOException {
             this.id = id;
             this.socket = socket;
-            printWriter = new PrintWriter(socket.getOutputStream());
+            printWriter = new PrintWriter(
+                    new BufferedOutputStream(socket.getOutputStream()));
         }
 
         @Override
