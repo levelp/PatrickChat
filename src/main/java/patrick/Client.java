@@ -29,6 +29,7 @@ public class Client {
 
     // varargs - переменное количество аргументов
     public static void main(String... args) throws IOException {
+        System.out.println("Client.main");
         if (args.length <= 2) {
             System.out.println("Client <host IP> <nickname>");
             return;
