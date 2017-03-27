@@ -13,8 +13,8 @@ public class Boot {
         serverThread.start();
 
         // Создаём 2-х клиентов и запускаем его
-        Client client = new Client("localhost");
-        Client client2 = new Client("localhost");
+        ClientCommucation client = new ClientCommucation("localhost");
+        ClientCommucation client2 = new ClientCommucation("localhost");
         client.send("Hello!");
         pause(100);
         client2.send("И тебе привет!");

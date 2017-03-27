@@ -14,6 +14,9 @@
         <java.version>1.8</java.version>
     </properties>
 
+    <packaging>jar</packaging>
+
+
     <dependencies>
         <!-- Библиотека для JUnit-тестирования -->
         <dependency>
@@ -41,7 +44,24 @@
                         <target>${java.version}</target>
                     </configuration>
                 </plugin>
+                <!--<plugin>-->
+                <!--&lt;!&ndash; Build an executable JAR &ndash;&gt;-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-jar-plugin</artifactId>-->
+                <!--<version>3.0.2</version>-->
+                <!--<configuration>-->
+                <!--<archive>-->
+                <!--<manifest>-->
+                <!--<addClasspath>true</addClasspath>-->
+                <!--<classpathPrefix>lib/</classpathPrefix>-->
+                <!--<mainClass>patrick.Boot</mainClass>-->
+                <!--</manifest>-->
+                <!--</archive>-->
+                <!--</configuration>-->
+                <!--</plugin>-->
             </plugins>
+
+
         </pluginManagement>
     </build>
 </project>

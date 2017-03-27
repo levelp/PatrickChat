@@ -2,6 +2,7 @@ package patrick;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
@@ -10,10 +11,10 @@ import java.util.Scanner;
  * Класс, который отвечает за обмен данными с одним клиентом
  */
 class ClientCom implements Runnable {
-    private Server server;
     private final int id;
     private final Socket socket;
     private final PrintWriter printWriter;
+    private Server server;
 
     /**
      * @param id     Идентификатор клиента (уникальное число)
@@ -29,14 +30,14 @@ class ClientCom implements Runnable {
         this.id = id;
         this.socket = socket;
         printWriter = new PrintWriter(
-                new BufferedOutputStream(socket.getOutputStream()));
+                new OutputStreamWriter(new BufferedOutputStream(socket.getOutputStream()), "UTF-8"));
     }
 
     @Override
     public void run() {
         try {
             // Открываем на чтение
-            Scanner scanner = new Scanner(socket.getInputStream());
+            Scanner scanner = new Scanner(socket.getInputStream(), "UTF-8");
             while (scanner.hasNextLine()) {
                 // Что нам прислал клиент
                 String request = scanner.nextLine();
