@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Scanner;
 
 /**
@@ -22,7 +23,7 @@ public class ClientCommucation {
         final Scanner scanner = new Scanner(socket.getInputStream(), "UTF-8");
         Thread listenToServer = new Thread(() -> {
             while (scanner.hasNextLine()) {
-                System.out.println("Получили: " + scanner.nextLine());
+                System.out.println((new Date()) + " " + scanner.nextLine());
             }
         });
         listenToServer.start();
