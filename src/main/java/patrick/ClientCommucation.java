@@ -23,7 +23,7 @@ public class ClientCommucation {
         final Scanner scanner = new Scanner(socket.getInputStream(), "UTF-8");
         Thread listenToServer = new Thread(() -> {
             while (scanner.hasNextLine()) {
-                System.out.println((new Date()) + " " + scanner.nextLine());
+                System.out.printf("%1$td %1$tB %1$tY %1$tl:%1$tm:%1$tS %2$s%n", new Date(), scanner.nextLine());
             }
         });
         listenToServer.start();

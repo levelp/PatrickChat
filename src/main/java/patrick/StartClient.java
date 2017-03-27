@@ -10,13 +10,16 @@ public class StartClient {
         // ...
         // 3. Сопровождения
         // ...
-        if (args.length < 1) {
-            System.out.println("StartClient <nickName>");
-            return;
-        }
         Scanner scanner = new Scanner(System.in, "UTF-8");
-        //     System.out.print("Введите никнейм: ");
-        String nickName = args[0];
+        String nickName;
+        if (args.length < 1) {
+            System.out.print("Введите никнейм: ");
+            nickName = scanner.nextLine();
+        } else {
+            nickName = args[0];
+        }
+        System.out.println("Вы можете отправлять сообщения в чат вводя их и нажимая Enter");
+
         ClientData clientData = new ClientData(nickName);
 
         Client client = new Client(clientData);
