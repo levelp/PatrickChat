@@ -53,7 +53,9 @@ public class Server implements Runnable {
                 System.out.println("Подключился клиент " +
                         clientCount + " " + socket.getInetAddress());
                 ClientCom clientCom = new ClientCom(this, clientCount, socket);
-                clientComs.add(clientCom);
+                synchronized (clientComs) {
+                    clientComs.add(clientCom);
+                }
                 Thread read = new Thread(clientCom);
                 read.start();
             }
@@ -71,8 +73,10 @@ public class Server implements Runnable {
      * @param message сообщение
      */
     void sendToAll(String message) {
-        for (ClientCom com : clientComs) {
-            com.send(message);
+        synchronized (clientComs) {
+            for (ClientCom com : clientComs) {
+                com.send(message);
+            }
         }
     }
 
@@ -135,10 +139,12 @@ public class Server implements Runnable {
      * @param message  сообщение
      */
     private void sendToClient(int clientId, String message) {
-        for (ClientCom com : clientComs) {
-            if (com.getId() == clientId) {
-                com.send(message);
-                return;
+        synchronized (clientComs) {
+            for (ClientCom com : clientComs) {
+                if (com.getId() == clientId) {
+                    com.send(message);
+                    return;
+                }
             }
         }
     }
@@ -151,10 +157,12 @@ public class Server implements Runnable {
      */
     private void kickClient(int targetId, int adminId) {
         ClientCom targetClient = null;
-        for (ClientCom com : clientComs) {
-            if (com.getId() == targetId) {
-                targetClient = com;
-                break;
+        synchronized (clientComs) {
+            for (ClientCom com : clientComs) {
+                if (com.getId() == targetId) {
+                    targetClient = com;
+                    break;
+                }
             }
         }
 
@@ -173,10 +181,18 @@ public class Server implements Runnable {
         
         // Закрываем соединение
         targetClient.disconnect();
-        clientComs.remove(targetClient);
+        
+        synchronized (clientComs) {
+            clientComs.remove(targetClient);
+        }
         
         System.out.println("Клиент #" + targetId + " был исключён администратором #" + adminId);
     }
+
+    /**
+     * Таймер для запланированного выключения
+     */
+    private Timer shutdownTimer;
 
     /**
      * Запланировать выключение сервера
@@ -184,21 +200,31 @@ public class Server implements Runnable {
      * @param seconds количество секунд до выключения
      */
     private void scheduleShutdown(int seconds) {
-        if (seconds <= 0) {
+        if (seconds < 0) {
+            sendToClient(1, "Ошибка: количество секунд не может быть отрицательным");
+            return;
+        }
+        
+        if (seconds == 0) {
             shutdownServer();
             return;
+        }
+
+        // Отменяем предыдущий таймер, если он существует
+        if (shutdownTimer != null) {
+            shutdownTimer.cancel();
         }
 
         sendToAll("Сервер прекратит свою работу через " + seconds + " секунд(ы)");
         System.out.println("Запланировано выключение сервера через " + seconds + " секунд");
 
-        Timer timer = new Timer();
+        shutdownTimer = new Timer();
         
         // Отправляем уведомления каждую секунду, если осталось меньше 10 секунд
         if (seconds <= 10) {
             for (int i = seconds - 1; i > 0; i--) {
                 final int remaining = i;
-                timer.schedule(new TimerTask() {
+                shutdownTimer.schedule(new TimerTask() {
                     @Override
                     public void run() {
                         sendToAll("Сервер прекратит свою работу через " + remaining + " секунд(ы)");
@@ -211,7 +237,7 @@ public class Server implements Runnable {
             for (int interval : intervals) {
                 if (interval < seconds) {
                     final int remaining = interval;
-                    timer.schedule(new TimerTask() {
+                    shutdownTimer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             sendToAll("Сервер прекратит свою работу через " + remaining + " секунд(ы)");
@@ -222,7 +248,7 @@ public class Server implements Runnable {
         }
 
         // Запланировать само выключение
-        timer.schedule(new TimerTask() {
+        shutdownTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 shutdownServer();
@@ -239,11 +265,20 @@ public class Server implements Runnable {
         
         running = false;
         
-        // Закрываем все клиентские соединения
-        for (ClientCom com : new ArrayList<>(clientComs)) {
-            com.disconnect();
+        // Отменяем таймер выключения, если он существует
+        if (shutdownTimer != null) {
+            shutdownTimer.cancel();
+            shutdownTimer = null;
         }
-        clientComs.clear();
+        
+        // Закрываем все клиентские соединения
+        // Используем копию списка для избежания ConcurrentModificationException
+        synchronized (clientComs) {
+            for (ClientCom com : new ArrayList<>(clientComs)) {
+                com.disconnect();
+            }
+            clientComs.clear();
+        }
         
         // Закрываем серверный сокет
         try {

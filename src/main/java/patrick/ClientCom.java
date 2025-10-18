@@ -16,6 +16,7 @@ class ClientCom implements Runnable {
     private final PrintWriter printWriter;
     private Server server;
     private volatile boolean connected = true;
+    private Scanner scanner;
 
     /**
      * @param id     Идентификатор клиента (уникальное число)
@@ -38,7 +39,7 @@ class ClientCom implements Runnable {
     public void run() {
         try {
             // Открываем на чтение
-            Scanner scanner = new Scanner(socket.getInputStream(), "UTF-8");
+            scanner = new Scanner(socket.getInputStream(), "UTF-8");
             
             // Приветственное сообщение для администратора
             if (id == 1) {
@@ -86,7 +87,15 @@ class ClientCom implements Runnable {
     void disconnect() {
         connected = false;
         try {
-            socket.close();
+            if (scanner != null) {
+                scanner.close();
+            }
+            if (printWriter != null) {
+                printWriter.close();
+            }
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
