@@ -7,11 +7,11 @@ public class Client {
     private final ClientData clientData;
     private final ClientCommucation client;
 
-    public Client(ClientData clientData) throws IOException {
+    public Client(ClientData clientData, String serverHost) throws IOException {
 
         this.clientData = clientData;
 
-        client = new ClientCommucation("192.168.1.86");
+        client = new ClientCommucation(serverHost);
     }
 
     public void send(String line) {
