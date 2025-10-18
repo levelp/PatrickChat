@@ -15,6 +15,7 @@ class ClientCom implements Runnable {
     private final Socket socket;
     private final PrintWriter printWriter;
     private Server server;
+    private volatile boolean connected = true;
 
     /**
      * @param id     Идентификатор клиента (уникальное число)
@@ -38,19 +39,56 @@ class ClientCom implements Runnable {
         try {
             // Открываем на чтение
             Scanner scanner = new Scanner(socket.getInputStream(), "UTF-8");
-            while (scanner.hasNextLine()) {
+            
+            // Приветственное сообщение для администратора
+            if (id == 1) {
+                send("Вы вошли как администратор. Доступные команды:");
+                send("/kick <id> - исключить клиента");
+                send("/shutdown <секунды> - выключить сервер через заданное время");
+            }
+            
+            while (connected && scanner.hasNextLine()) {
                 // Что нам прислал клиент
                 String request = scanner.nextLine();
                 System.out.println("Клиент #" + id + " прислал: " + request);
-                server.sendToAll(request);
+                
+                // Проверяем, является ли это командой администратора
+                if (request.startsWith("/") && id == 1) {
+                    server.handleAdminCommand(request, id);
+                } else {
+                    server.sendToAll(request);
+                }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            if (connected) {
+                ex.printStackTrace();
+            }
         }
     }
 
     void send(String message) {
-        printWriter.println(message);
-        printWriter.flush();
+        if (connected) {
+            printWriter.println(message);
+            printWriter.flush();
+        }
+    }
+    
+    /**
+     * Получить ID клиента
+     */
+    int getId() {
+        return id;
+    }
+    
+    /**
+     * Отключить клиента
+     */
+    void disconnect() {
+        connected = false;
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
